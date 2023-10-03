@@ -15,12 +15,16 @@ export interface CloudConfigData {
 export const CLOUD_CONFIG_DEFAULT_GROUP = "defaultGroup";
 export const CLOUD_CONFIG_DEFAULT_PROJECT = "defaultProject";
 
+export const IS_PROD = process.env.NODE_ENV === "production";
+
+export const CLOUD_CONFIG_API_ENDPOINT =
+  process.env.NEXT_PUBLIC_CLOUD_CONFIG_API_ENDPOINT ||
+  "http://localhost:3001/api";
+
 const couldConfigSecretClient =
   process.env.NEXT_PUBLIC_CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET;
 
 const couldConfigSecretServer = process.env.CLOUD_CONFIG_SERVER_ENCRYPT_SECRET;
-
-export const IS_PROD = process.env.NODE_ENV === "production";
 
 export const decryptData = (
   data: string,
@@ -129,4 +133,70 @@ export const getCloudConfig = <T>({
   }
 
   return config.value as T;
+};
+
+export const fetchCloudConfig = async ({
+  orgId,
+  serverSide = false,
+  accessToken,
+  cache = "default",
+  apiPrefix = CLOUD_CONFIG_API_ENDPOINT,
+}: {
+  orgId: string;
+  serverSide?: boolean;
+  accessToken?: string;
+  cache?: RequestCache;
+  apiPrefix?: string;
+}) => {
+  try {
+    const startTime = Date.now();
+
+    const apiEndpoint = serverSide
+      ? `${apiPrefix}/server-config`
+      : `${apiPrefix}/client-config?orgId=${orgId}`;
+
+    const requestData = serverSide
+      ? JSON.stringify({ orgId, accessToken })
+      : undefined;
+    const response = await fetch(apiEndpoint, {
+      method: serverSide ? "POST" : "GET",
+      body: requestData,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: cache,
+    });
+    if (!response.ok) {
+      console.log("🚀 Debug fetchCloudConfig requestData:", requestData);
+
+      throw new Error(
+        `😢 fetchCloudConfig failed: ${response.status}/${response.statusText} - ${apiEndpoint}`
+      );
+    }
+    const duration = Date.now() - startTime;
+
+    console.log(
+      `fetchCloudConfig in ${(duration / 1000).toFixed(2)} seconds ${
+        duration > 2000 ? "💔" : "-"
+      } ${apiEndpoint}`
+    );
+
+    return (await response.json()) as CloudConfigData[];
+  } catch (error) {
+    console.log("💔💔💔 fetchCloudConfig error:", error);
+  }
+
+  return null;
+};
+
+export default {
+  CLOUD_CONFIG_DEFAULT_GROUP,
+  CLOUD_CONFIG_DEFAULT_PROJECT,
+  IS_PROD,
+  CLOUD_CONFIG_API_ENDPOINT,
+  decryptData,
+  parseSingleConfig,
+  parseAllConfigs,
+  getCloudConfig,
+  fetchCloudConfig,
 };

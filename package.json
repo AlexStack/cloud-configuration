@@ -5,18 +5,19 @@
   "author": "Alex Zeng",
   "license": "MIT",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AlexStack/cloud-config-package.git"
+    "url": "git+https://github.com/AlexStack/cloud-configuration.git"
   },
   "keywords": [],
   "bugs": {
-    "url": "https://github.com/AlexStack/cloud-config-package/issues"
+    "url": "https://github.com/AlexStack/cloud-configuration/issues"
   },
-  "homepage": "https://github.com/AlexStack/cloud-config-package#readme",
+  "homepage": "https://github.com/AlexStack/cloud-configuration#readme",
   "devDependencies": {
     "@types/crypto-js": "^4.1.2",
     "@types/node": "^20.8.2"
