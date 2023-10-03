@@ -1,0 +1,27 @@
+{
+  "name": "cloud-configuration",
+  "version": "0.1.0",
+  "description": "This package allows you to use CloudConfig easily.",
+  "author": "Alex Zeng",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexStack/cloud-config-package.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/AlexStack/cloud-config-package/issues"
+  },
+  "homepage": "https://github.com/AlexStack/cloud-config-package#readme",
+  "devDependencies": {
+    "@types/crypto-js": "^4.1.2",
+    "@types/node": "^20.8.2"
+  },
+  "dependencies": {
+    "crypto-js": "^4.1.1"
+  }
+}

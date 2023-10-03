@@ -1,0 +1,15 @@
+# test .npmignore by run "npm pack" before run "npm publish"
+vendor
+node_modules
+node_lambda_layer
+.serverless
+.env
+example
+vercel.*
+serverless.*
+*.zip
+*.tgz
+*.gz
+*bak.js
+*BAK.js
+test
