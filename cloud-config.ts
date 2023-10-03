@@ -21,6 +21,10 @@ export const CLOUD_CONFIG_API_ENDPOINT =
   process.env.NEXT_PUBLIC_CLOUD_CONFIG_API_ENDPOINT ||
   "http://localhost:3001/api";
 
+export const CLOUD_CONFIG_ORG_ID =
+  process.env.NEXT_PUBLIC_CLOUD_CONFIG_ORG_ID ||
+  "Missing NEXT_PUBLIC_CLOUD_CONFIG_ORG_ID in .env";
+
 const couldConfigSecretClient =
   process.env.NEXT_PUBLIC_CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET;
 
@@ -135,14 +139,14 @@ export const getCloudConfig = <T>({
   return config.value as T;
 };
 
-export const fetchCloudConfig = async ({
-  orgId,
+export const fetchAllConfigs = async ({
+  orgId = CLOUD_CONFIG_ORG_ID,
   serverSide = false,
   accessToken,
   cache = "default",
   apiPrefix = CLOUD_CONFIG_API_ENDPOINT,
 }: {
-  orgId: string;
+  orgId?: string;
   serverSide?: boolean;
   accessToken?: string;
   cache?: RequestCache;
@@ -167,26 +171,28 @@ export const fetchCloudConfig = async ({
       cache: cache,
     });
     if (!response.ok) {
-      console.log("🚀 Debug fetchCloudConfig requestData:", requestData);
+      console.log("🚀 Debug fetchAllConfigs requestData:", requestData);
 
       throw new Error(
-        `😢 fetchCloudConfig failed: ${response.status}/${response.statusText} - ${apiEndpoint}`
+        `😢 fetchAllConfigs failed: ${response.status}/${response.statusText} - ${apiEndpoint}`
       );
     }
     const duration = Date.now() - startTime;
 
     console.log(
-      `fetchCloudConfig in ${(duration / 1000).toFixed(2)} seconds ${
+      `fetchAllConfigs in ${(duration / 1000).toFixed(2)} seconds ${
         duration > 2000 ? "💔" : "-"
       } ${apiEndpoint}`
     );
 
-    return (await response.json()) as CloudConfigData[];
+    const configs = ((await response.json()) || []) as CloudConfigData[];
+
+    return parseAllConfigs(configs, serverSide);
   } catch (error) {
-    console.log("💔💔💔 fetchCloudConfig error:", error);
+    console.log("💔💔💔 fetchAllConfigs error:", error);
   }
 
-  return null;
+  return [];
 };
 
 export default {
@@ -198,5 +204,5 @@ export default {
   parseSingleConfig,
   parseAllConfigs,
   getCloudConfig,
-  fetchCloudConfig,
+  fetchAllConfigs,
 };
