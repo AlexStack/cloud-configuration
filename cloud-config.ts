@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import AES from "crypto-js/aes";
 import encUtf8 from "crypto-js/enc-utf8";
 
@@ -34,11 +35,16 @@ export const decryptData = (
   data: string,
   cryptSecret: string
 ): string | null => {
-  const decryptedText = AES.decrypt(data, cryptSecret);
-  if (!decryptedText) {
-    return null;
+  try {
+    const decryptedData = AES.decrypt(data, cryptSecret);
+    const decryptedText = decryptedData.toString(encUtf8);
+    if (!decryptedText || decryptedText === data) {
+      return "Decrypt value failed! Make sure the encrypt secret is correct in env";
+    }
+  } catch (error) {
+    console.log("😅😅😅 decryptData failed", error);
   }
-  return decryptedText.toString(encUtf8);
+  return "Decrypt value failed! Please check your encrypt secret settings in env";
 };
 
 export const parseSingleConfig = (
@@ -52,9 +58,8 @@ export const parseSingleConfig = (
     ? couldConfigSecretServer
     : couldConfigSecretClient;
   if (!cryptSecret) {
-    // eslint-disable-next-line no-console
     console.log(
-      `Can't decrypt featureKey ${config.featureKey}, Please set ${
+      `😅😅😅 Can't decrypt featureKey ${config.featureKey}, Please set ${
         serverSideOnly
           ? "CLOUD_CONFIG_SERVER_ENCRYPT_SECRET"
           : "NEXT_PUBLIC_CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET"
@@ -72,8 +77,11 @@ export const parseSingleConfig = (
     try {
       newValue = JSON.parse(decryptedValue);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.log("JSON.parse(decryptedValue) error", config.value, error);
+      console.log(
+        "😅😅😅 JSON.parse(decryptedValue) error",
+        config.value,
+        error
+      );
     }
   }
   if (config.valueType === "array") {
@@ -101,11 +109,12 @@ export const parseAllConfigs = (
   return configs.map((config) => parseSingleConfig(config, serverSideOnly));
 };
 
-interface GetCloudConfigParams {
+interface GetCloudConfigParams<T> {
   featureKey: string;
   groupName?: string;
   projectName?: string;
   configs: CloudConfigData[];
+  defaultValue?: T;
 }
 
 export const getCloudConfig = <T>({
@@ -113,7 +122,8 @@ export const getCloudConfig = <T>({
   groupName = CLOUD_CONFIG_DEFAULT_GROUP,
   projectName = CLOUD_CONFIG_DEFAULT_PROJECT,
   configs,
-}: GetCloudConfigParams) => {
+  defaultValue,
+}: GetCloudConfigParams<T>) => {
   const config = configs.find((item) => {
     if (item.featureKey !== featureKey) {
       return false;
@@ -126,33 +136,46 @@ export const getCloudConfig = <T>({
     }
     return true;
   });
+  const newDefaultValue = defaultValue === undefined ? null : defaultValue;
   if (!config) {
-    return null;
+    return newDefaultValue;
   }
   if (IS_PROD && !config.prodEnabled) {
-    return null;
+    return newDefaultValue;
   }
   if (!IS_PROD && !config.devEnabled) {
-    return null;
+    return newDefaultValue;
+  }
+  if (config.value === null || config.value === undefined) {
+    return newDefaultValue;
   }
 
   return config.value as T;
 };
 
-export const fetchAllConfigs = async ({
-  orgId = CLOUD_CONFIG_ORG_ID,
-  serverSide = false,
-  accessToken,
-  cache = "default",
-  apiPrefix = CLOUD_CONFIG_API_ENDPOINT,
-}: {
+interface FetchAllConfigsParams {
   orgId?: string;
   serverSide?: boolean;
   accessToken?: string;
   cache?: RequestCache;
   apiPrefix?: string;
-}) => {
+  cacheSeconds?: number;
+}
+
+export const fetchAllConfigs = async (
+  params: FetchAllConfigsParams = {
+    orgId: CLOUD_CONFIG_ORG_ID,
+    serverSide: false,
+    accessToken: undefined,
+    cache: "default",
+    apiPrefix: CLOUD_CONFIG_API_ENDPOINT,
+    cacheSeconds: 60,
+  }
+) => {
   try {
+    const { orgId, serverSide, accessToken, cache, apiPrefix, cacheSeconds } =
+      params;
+
     const startTime = Date.now();
 
     const apiEndpoint = serverSide
@@ -169,6 +192,7 @@ export const fetchAllConfigs = async ({
         "Content-Type": "application/json",
       },
       cache: cache,
+      // next: { revalidate: cacheSeconds },
     });
     if (!response.ok) {
       console.log("🚀 Debug fetchAllConfigs requestData:", requestData);
@@ -195,7 +219,7 @@ export const fetchAllConfigs = async ({
   return [];
 };
 
-export default {
+const cloudConfig = {
   CLOUD_CONFIG_DEFAULT_GROUP,
   CLOUD_CONFIG_DEFAULT_PROJECT,
   IS_PROD,
@@ -206,3 +230,5 @@ export default {
   getCloudConfig,
   fetchAllConfigs,
 };
+
+export default cloudConfig;
