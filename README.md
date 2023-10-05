@@ -17,11 +17,17 @@ yarn add cloud-configuration
 ## Basic Usage
 
 ```typescript
-import { fetchAllConfigs, getCloudConfig } from "cloud-configuration";
+import cloudConfig from "cloud-configuration";
 
-const configs = await fetchAllConfigs();
+const configs = await cloudConfig.fetchAll();
 
-const auFlagUrl = getCloudConfig({ configs, featureKey: "au_flag_url" });
+const auFlagUrl = cloudConfig.get({ configs, featureKey: "au_flag_url" }); // return value or null
+
+const usFlagUrl = cloudConfig.getWithDefault({
+  configs,
+  featureKey: "us_flag_url",
+  defaultValue: "https://example.com/us.png",
+}); // return typed value or default value, good for typescript
 ```
 
 ## Local .env examples
