@@ -178,7 +178,7 @@ export const fetchAllConfigs = async (
     accessToken: undefined,
     cache: "default",
     apiPrefix: CLOUD_CONFIG_API_ENDPOINT,
-    cacheSeconds: 60,
+    // cacheSeconds: 60,
   }
 ) => {
   try {
@@ -189,7 +189,7 @@ export const fetchAllConfigs = async (
 
     const apiEndpoint = serverSide
       ? `${apiPrefix}/server-config`
-      : `${apiPrefix}/client-config?orgId=${orgId}`;
+      : `${apiPrefix}/client-config/org-${orgId}`;
 
     const requestData = serverSide
       ? JSON.stringify({ orgId, accessToken })
@@ -201,12 +201,11 @@ export const fetchAllConfigs = async (
       headers: {
         "Content-Type": "application/json",
       },
-      cache: cache,
+      cache: cacheSeconds !== undefined ? undefined : cache,
       next: { revalidate: cacheSeconds },
     };
 
     const response = await fetch(apiEndpoint, fetchInit);
-
     if (!response.ok) {
       console.log("🚀 Debug fetchAllConfigs requestData:", requestData);
 
