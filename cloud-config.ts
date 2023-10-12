@@ -1,35 +1,16 @@
 /* eslint-disable no-console */
-import AES from "crypto-js/aes";
-import encUtf8 from "crypto-js/enc-utf8";
+import AES from 'crypto-js/aes';
+import encUtf8 from 'crypto-js/enc-utf8';
 
-export interface CloudConfigData {
-  projectName: string;
-  groupName: string;
-  featureKey: string;
-  value: unknown;
-  valueType: string;
-  prodEnabled?: boolean;
-  devEnabled?: boolean;
-  valueEncrypted?: boolean;
-}
-
-export const CLOUD_CONFIG_DEFAULT_GROUP = "defaultGroup";
-export const CLOUD_CONFIG_DEFAULT_PROJECT = "defaultProject";
-
-export const IS_PROD = process.env.NODE_ENV === "production";
-
-export const CLOUD_CONFIG_API_ENDPOINT =
-  process.env.NEXT_PUBLIC_CLOUD_CONFIG_API_ENDPOINT ||
-  "http://localhost:3001/api";
-
-export const CLOUD_CONFIG_ORG_ID =
-  process.env.NEXT_PUBLIC_CLOUD_CONFIG_ORG_ID ||
-  "Missing NEXT_PUBLIC_CLOUD_CONFIG_ORG_ID in .env";
-
-const couldConfigSecretClient =
-  process.env.NEXT_PUBLIC_CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET;
-
-const couldConfigSecretServer = process.env.CLOUD_CONFIG_SERVER_ENCRYPT_SECRET;
+import {
+  CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET,
+  CLOUD_CONFIG_DEFAULT_GROUP,
+  CLOUD_CONFIG_DEFAULT_PROJECT,
+  CLOUD_CONFIG_FETCH_ALL_DEFAULT_VALUE,
+  CLOUD_CONFIG_SERVER_ENCRYPT_SECRET,
+  IS_PROD,
+} from './constants';
+import { CloudConfigData, FetchAllConfigsParams } from './types';
 
 export const decryptConfig = (
   data: string,
@@ -39,13 +20,13 @@ export const decryptConfig = (
     const decryptedData = AES.decrypt(data, cryptSecret);
     const decryptedText = decryptedData.toString(encUtf8);
     if (!decryptedText || decryptedText === data) {
-      return "Decrypt value failed! Make sure the encrypt secret is correct in env";
+      return 'Decrypt value failed! Make sure the encrypt secret is correct in env';
     }
     return decryptedText;
   } catch (error) {
-    console.log("😅😅😅 decryptConfig failed", error);
+    console.log('😅😅😅 decryptConfig failed', error);
   }
-  return "Decrypt value failed! Please check your encrypt secret settings in env";
+  return 'Decrypt value failed! Please check your encrypt secret settings in env';
 };
 
 export const parseSingleConfig = (
@@ -56,15 +37,15 @@ export const parseSingleConfig = (
     return config;
   }
   const cryptSecret = serverSideOnly
-    ? couldConfigSecretServer
-    : couldConfigSecretClient;
+    ? CLOUD_CONFIG_SERVER_ENCRYPT_SECRET
+    : CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET;
   if (!cryptSecret) {
     // eslint-disable-next-line no-console
     console.log(
       `😅😅😅 Can't decrypt featureKey ${config.featureKey}, Please set ${
         serverSideOnly
-          ? "CLOUD_CONFIG_SERVER_ENCRYPT_SECRET"
-          : "NEXT_PUBLIC_CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET"
+          ? 'CLOUD_CONFIG_SERVER_ENCRYPT_SECRET'
+          : 'NEXT_PUBLIC_CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET'
       } in .env`
     );
     return config;
@@ -75,24 +56,24 @@ export const parseSingleConfig = (
   }
 
   let newValue;
-  if (config.valueType === "json") {
+  if (config.valueType === 'json') {
     try {
       newValue = JSON.parse(decryptedValue);
     } catch (error) {
       console.log(
-        "😅😅😅 JSON.parse(decryptedValue) error",
+        '😅😅😅 JSON.parse(decryptedValue) error',
         config.value,
         error
       );
     }
   }
-  if (config.valueType === "array") {
-    newValue = decryptedValue.split(",").map((tag) => tag.trim());
+  if (config.valueType === 'array') {
+    newValue = decryptedValue.split(',').map((tag) => tag.trim());
   }
-  if (config.valueType === "number") {
+  if (config.valueType === 'number') {
     newValue = parseFloat(decryptedValue);
   }
-  if (config.valueType === "boolean") {
+  if (config.valueType === 'boolean') {
     newValue = Boolean(decryptedValue);
   }
 
@@ -162,28 +143,12 @@ export const getConfigWithDefaultValue = <T>(
   return value === null || value === undefined ? params.defaultValue : value;
 };
 
-interface FetchAllConfigsParams {
-  orgId?: string;
-  serverSide?: boolean;
-  accessToken?: string;
-  cache?: RequestCache;
-  apiPrefix?: string;
-  cacheSeconds?: number;
-}
-
-export const fetchAllConfigs = async (
-  params: FetchAllConfigsParams = {
-    orgId: CLOUD_CONFIG_ORG_ID,
-    serverSide: false,
-    accessToken: undefined,
-    cache: "default",
-    apiPrefix: CLOUD_CONFIG_API_ENDPOINT,
-    // cacheSeconds: 60,
-  }
-) => {
+export const fetchAllConfigs = async (params?: FetchAllConfigsParams) => {
   try {
-    const { orgId, serverSide, accessToken, cache, apiPrefix, cacheSeconds } =
-      params;
+    const { orgId, serverSide, accessToken, cache, apiPrefix, cacheSeconds } = {
+      ...CLOUD_CONFIG_FETCH_ALL_DEFAULT_VALUE,
+      ...params,
+    };
 
     const startTime = Date.now();
 
@@ -196,10 +161,10 @@ export const fetchAllConfigs = async (
       : undefined;
 
     const fetchInit = {
-      method: serverSide ? "POST" : "GET",
+      method: serverSide ? 'POST' : 'GET',
       body: requestData,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       cache: cacheSeconds !== undefined ? undefined : cache,
       next: { revalidate: cacheSeconds },
@@ -207,7 +172,7 @@ export const fetchAllConfigs = async (
 
     const response = await fetch(apiEndpoint, fetchInit);
     if (!response.ok) {
-      console.log("🚀 Debug fetchAllConfigs requestData:", requestData);
+      console.log('🚀 Debug fetchAllConfigs requestData:', requestData);
 
       throw new Error(
         `😢 fetchAllConfigs failed: ${response.status}/${response.statusText} - ${apiEndpoint}`
@@ -217,7 +182,7 @@ export const fetchAllConfigs = async (
 
     console.log(
       `fetchAllConfigs in ${(duration / 1000).toFixed(2)} seconds ${
-        duration > 2000 ? "💔" : "-"
+        duration > 2000 ? '💔' : '-'
       } ${apiEndpoint}`
     );
 
@@ -225,13 +190,13 @@ export const fetchAllConfigs = async (
 
     return parseAllConfigs(configs, serverSide);
   } catch (error) {
-    console.log("💔💔💔 fetchAllConfigs error:", error);
+    console.log('💔💔💔 fetchAllConfigs error:', error);
   }
 
   return [];
 };
 
-const cloudConfig = {
+export const cloudConfig = {
   // DEFAULT_GROUP: CLOUD_CONFIG_DEFAULT_GROUP,
   // DEFAULT_PROJECT: CLOUD_CONFIG_DEFAULT_PROJECT,
   // IS_PROD: IS_PROD,
@@ -243,5 +208,3 @@ const cloudConfig = {
   getWithDefault: getConfigWithDefaultValue,
   fetchAll: fetchAllConfigs,
 };
-
-export default cloudConfig;
