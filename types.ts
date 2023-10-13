@@ -16,4 +16,5 @@ export interface FetchAllConfigsParams {
   cache?: RequestCache;
   apiPrefix?: string;
   cacheSeconds?: number;
+  decryptSecret?: string;
 }

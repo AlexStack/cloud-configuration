@@ -20,7 +20,10 @@ export const decryptConfig = (
     const decryptedData = AES.decrypt(data, cryptSecret);
     const decryptedText = decryptedData.toString(encUtf8);
     if (!decryptedText || decryptedText === data) {
-      return 'Decrypt value failed! Make sure the encrypt secret is correct in env';
+      return (
+        'Decrypt value failed! Make sure the encrypt secret is correct in env' +
+        cryptSecret
+      );
     }
     return decryptedText;
   } catch (error) {
@@ -31,7 +34,8 @@ export const decryptConfig = (
 
 export const parseSingleConfig = (
   config: CloudConfigData,
-  serverSideOnly = false
+  serverSideOnly = false,
+  decryptSecret?: string
 ): CloudConfigData => {
   if (!config.valueEncrypted) {
     return config;
@@ -39,7 +43,8 @@ export const parseSingleConfig = (
   const cryptSecret = serverSideOnly
     ? CLOUD_CONFIG_SERVER_ENCRYPT_SECRET
     : CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET;
-  if (!cryptSecret) {
+  const newDecryptSecret = decryptSecret || cryptSecret;
+  if (!newDecryptSecret) {
     // eslint-disable-next-line no-console
     console.log(
       `😅😅😅 Can't decrypt featureKey ${config.featureKey}, Please set ${
@@ -50,7 +55,10 @@ export const parseSingleConfig = (
     );
     return config;
   }
-  const decryptedValue = decryptConfig(config.value as string, cryptSecret);
+  const decryptedValue = decryptConfig(
+    config.value as string,
+    newDecryptSecret
+  );
   if (!decryptedValue) {
     return config;
   }
@@ -87,9 +95,12 @@ export const parseSingleConfig = (
 
 export const parseAllConfigs = (
   configs: CloudConfigData[],
-  serverSideOnly = false
+  serverSideOnly = false,
+  decryptSecret?: string
 ): CloudConfigData[] => {
-  return configs.map((config) => parseSingleConfig(config, serverSideOnly));
+  return configs.map((config) =>
+    parseSingleConfig(config, serverSideOnly, decryptSecret)
+  );
 };
 
 interface GetCloudConfigParams<T> {
@@ -145,7 +156,15 @@ export const getConfigWithDefaultValue = <T>(
 
 export const fetchAllConfigs = async (params?: FetchAllConfigsParams) => {
   try {
-    const { orgId, serverSide, accessToken, cache, apiPrefix, cacheSeconds } = {
+    const {
+      orgId,
+      serverSide,
+      accessToken,
+      cache,
+      apiPrefix,
+      cacheSeconds,
+      decryptSecret,
+    } = {
       ...CLOUD_CONFIG_FETCH_ALL_DEFAULT_VALUE,
       ...params,
     };
@@ -188,7 +207,7 @@ export const fetchAllConfigs = async (params?: FetchAllConfigsParams) => {
 
     const configs = ((await response.json()) || []) as CloudConfigData[];
 
-    return parseAllConfigs(configs, serverSide);
+    return parseAllConfigs(configs, serverSide, decryptSecret);
   } catch (error) {
     console.log('💔💔💔 fetchAllConfigs error:', error);
   }

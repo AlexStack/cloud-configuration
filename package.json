@@ -1,13 +1,14 @@
 {
   "name": "cloud-configuration",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "This package allows you to use CloudConfig easily.",
   "author": "Alex Zeng",
   "license": "MIT",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish-package": "npm publish --access public"
   },
   "repository": {
     "type": "git",

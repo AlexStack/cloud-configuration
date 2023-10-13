@@ -13,3 +13,4 @@ serverless.*
 *bak.js
 *BAK.js
 test
+__test__
