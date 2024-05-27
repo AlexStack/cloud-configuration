@@ -1,5 +1,5 @@
 import { mockApiData } from './mock-api-data';
-import cloudConfig, { CloudConfigData } from '../index';
+import cloudConfig, { CloudConfigData } from '../src/index';
 
 let cloudConfigData: CloudConfigData[] = [];
 
