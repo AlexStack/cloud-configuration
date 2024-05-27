@@ -14,6 +14,18 @@ or
 yarn add cloud-configuration
 ```
 
+## Upgrade
+
+```bash
+npm update cloud-configuration
+```
+
+or
+
+```bash
+yarn upgrade cloud-configuration
+```
+
 ## Basic Usage
 
 ```typescript
