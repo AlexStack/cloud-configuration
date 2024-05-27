@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
-import AES from 'crypto-js/aes';
-import encUtf8 from 'crypto-js/enc-utf8';
+import AES from "crypto-js/aes";
+import encUtf8 from "crypto-js/enc-utf8";
 
 import {
   CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET,
@@ -9,8 +9,8 @@ import {
   CLOUD_CONFIG_FETCH_ALL_DEFAULT_VALUE,
   CLOUD_CONFIG_SERVER_ENCRYPT_SECRET,
   IS_PROD,
-} from './constants';
-import { CloudConfigData, FetchAllConfigsParams } from './types';
+} from "./constants";
+import { CloudConfigData, FetchAllConfigsParams } from "./types";
 
 export const decryptConfig = (
   data: string,
@@ -21,15 +21,15 @@ export const decryptConfig = (
     const decryptedText = decryptedData.toString(encUtf8);
     if (!decryptedText || decryptedText === data) {
       return (
-        'Decrypt value failed! Make sure the encrypt secret is correct in env' +
+        "Decrypt value failed! Make sure the encrypt secret is correct in env" +
         cryptSecret
       );
     }
     return decryptedText;
   } catch (error) {
-    console.log('😅😅😅 decryptConfig failed', error);
+    console.log("😅😅😅 decryptConfig failed", error);
   }
-  return 'Decrypt value failed! Please check your encrypt secret settings in env';
+  return "Decrypt value failed! Please check your encrypt secret settings in env";
 };
 
 export const parseSingleConfig = (
@@ -49,8 +49,8 @@ export const parseSingleConfig = (
     console.log(
       `😅😅😅 Can't decrypt featureKey ${config.featureKey}, Please set ${
         serverSideOnly
-          ? 'CLOUD_CONFIG_SERVER_ENCRYPT_SECRET'
-          : 'NEXT_PUBLIC_CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET'
+          ? "CLOUD_CONFIG_SERVER_ENCRYPT_SECRET"
+          : "NEXT_PUBLIC_CLOUD_CONFIG_CLIENT_ENCRYPT_SECRET"
       } in .env`
     );
     return config;
@@ -64,24 +64,24 @@ export const parseSingleConfig = (
   }
 
   let newValue;
-  if (config.valueType === 'json') {
+  if (config.valueType === "json") {
     try {
       newValue = JSON.parse(decryptedValue);
     } catch (error) {
       console.log(
-        '😅😅😅 JSON.parse(decryptedValue) error',
+        "😅😅😅 JSON.parse(decryptedValue) error",
         config.value,
         error
       );
     }
   }
-  if (config.valueType === 'array') {
-    newValue = decryptedValue.split(',').map((tag) => tag.trim());
+  if (config.valueType === "array") {
+    newValue = decryptedValue.split(",").map((tag) => tag.trim());
   }
-  if (config.valueType === 'number') {
+  if (config.valueType === "number") {
     newValue = parseFloat(decryptedValue);
   }
-  if (config.valueType === 'boolean') {
+  if (config.valueType === "boolean") {
     newValue = Boolean(decryptedValue);
   }
 
@@ -180,10 +180,10 @@ export const fetchAllConfigs = async (params?: FetchAllConfigsParams) => {
       : undefined;
 
     const fetchInit = {
-      method: serverSide ? 'POST' : 'GET',
+      method: serverSide ? "POST" : "GET",
       body: requestData,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       cache: cacheSeconds !== undefined ? undefined : cache,
       next: { revalidate: cacheSeconds },
@@ -191,7 +191,7 @@ export const fetchAllConfigs = async (params?: FetchAllConfigsParams) => {
 
     const response = await fetch(apiEndpoint, fetchInit);
     if (!response.ok) {
-      console.log('🚀 Debug fetchAllConfigs requestData:', requestData);
+      console.log("🚀 Debug fetchAllConfigs requestData:", requestData);
 
       throw new Error(
         `😢 fetchAllConfigs failed: ${response.status}/${response.statusText} - ${apiEndpoint}`
@@ -201,7 +201,7 @@ export const fetchAllConfigs = async (params?: FetchAllConfigsParams) => {
 
     console.log(
       `fetchAllConfigs in ${(duration / 1000).toFixed(2)} seconds ${
-        duration > 2000 ? '💔' : '-'
+        duration > 2000 ? "💔" : "-"
       } ${apiEndpoint}`
     );
 
@@ -209,7 +209,7 @@ export const fetchAllConfigs = async (params?: FetchAllConfigsParams) => {
 
     return parseAllConfigs(configs, serverSide, decryptSecret);
   } catch (error) {
-    console.log('💔💔💔 fetchAllConfigs error:', error);
+    console.log("💔💔💔 fetchAllConfigs error:", error);
   }
 
   return [];
