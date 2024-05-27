@@ -1,6 +1,6 @@
-# Cloud Config
+# Global Cloud Config
 
-Manage your cloud configuration with ease.
+Manage your cloud configuration with ease to build API-driven modern web apps.
 
 ## Installation
 
@@ -21,13 +21,23 @@ import cloudConfig from 'cloud-configuration';
 
 const configs = await cloudConfig.fetchAll();
 
-const auFlagUrl = cloudConfig.get({ configs, featureKey: 'au_flag_url' }); // return value or null
+// return value or null for default projectName & default groupName
+const auFlagUrl = cloudConfig.get({ configs, featureKey: 'au_flag_url' });
 
+// return typed value or default value, good for TypeScript
 const usFlagUrl = cloudConfig.getWithDefault({
   configs,
   featureKey: 'us_flag_url',
   defaultValue: 'https://example.com/us.png',
-}); // return typed value or default value, good for typescript
+});
+
+// not default projectName & not default groupName
+const auFlagUrl = cloudConfig.get({
+  configs,
+  projectName: 'my-project-001',
+  groupName: 'my-group-002',
+  featureKey: 'au_flag_url',
+});
 ```
 
 ## Local .env examples
@@ -42,6 +52,16 @@ NEXT_PUBLIC_CLOUD_CONFIG_ORG_ID=U2FsdGVkX1/1dETBp2nedJo/uDqXrpc=
 ## Whole package size
 
 - package size: < 10 kB
+
+## Demo projects using Global Cloud Config
+
+<!--
+TEMPLATE
+- [sitename](https://sitelink.com) ([Source](https://github.com/githublink))
+- [sitename](https://sitelink.com)
+-->
+
+- [HiHB](https://hihb.com/)
 
 ## License
 
